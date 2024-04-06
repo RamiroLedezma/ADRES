@@ -285,12 +285,12 @@ his_departamentos <- ggplot(prestadores_data, aes(x = depa_nombre, text = depa_n
 ggplotly(hist_departamentos)
 
 ## Histograma clpr
-hist_clpr <- ggplot(prestadores_data, aes(x = clpr_nombre, text = clpr_nombre)) +
+hist_clpr <- ggplot(prestadores_data, aes(x = clpr_nombre)) +
   geom_bar(fill = "red") +
   labs(title = "Prestadores") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggplotly(hist_clpr)
+hist_clpr
 
 # Gráfico de barras apiladas 
 dep_clpre <- ggplot(data = prestadores_data, aes(x = depa_nombre, fill = clpr_nombre, text = paste(depa_nombre , clpr_nombre))) +
