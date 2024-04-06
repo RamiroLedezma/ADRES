@@ -6,7 +6,10 @@ library(naniar)
 library(lubridate)
 library(stringr)
 library(dbplyr)
-library(stringi)
+library(ggplot2)
+library(plotly)
+library(ggplotly)
+library(ggplot2)
 
 
 
@@ -29,11 +32,16 @@ glimpse(prestadores_data)
 glimpse(municipios_data)
 
 prestadores_data %>% distinct(depa_nombre)
-
+# Después de correr el código de arriba noto que algunos departamentos están separados de sus capitales, tambíen corregire eso 
 prestadores_data <- prestadores_data %>%
   mutate(depa_nombre = case_when(
     depa_nombre == "Atl�ntico" ~ "Atlántico",
+    depa_nombre == "Barranquilla" ~ "Atlántico",
+    depa_nombre == 'Buenaventura' ~ "Valle del cauca",
+    depa_nombre == 'Cali' ~ "Valle del cauca",
+    depa_nombre == "Santa Marta" ~ "Magdalena",
     depa_nombre == "Bol�var" ~  "Bolívar",
+    depa_nombre == 'Cartagena' ~ 'Bolívar',
     depa_nombre == "Bogot� D.C" ~"Bogotá D.C",
     depa_nombre == "Boyac�"   ~ "Boyacá",
     depa_nombre == "Choc�"   ~ "Chocó",
@@ -46,6 +54,8 @@ prestadores_data <- prestadores_data %>%
     depa_nombre == "Vaup�s"  ~  "Vaupés",
       TRUE ~ depa_nombre  
   ))
+
+prestadores_data %>% distinct(depa_nombre)
 
 length(unique(prestadores_data$muni_nombre[str_detect(prestadores_data$muni_nombre, "�")]))  ### No es viable cambiar los nombres de los municipios como arriba
 
@@ -251,6 +261,45 @@ municipios_data <- municipios_data %>%
     TRUE ~ Departamento
   ))
 
-length(municipios_data$Municipio)
+prestadores_data <- prestadores_data %>%
+  mutate(clpr_nombre = case_when(
+    clpr_nombre == "Objeto Social Diferente a la Prestaci�n de Servicios de Salud" ~ "Objeto Social Diferente a la Prestación de Servicios de Salud",
+TRUE ~ clpr_nombre))
+ 
+### Buscado valores nulos para decidir como tratarlos 
 
-dbDisconnect(data_base)
+colSums(is.na(municipios_data))
+
+colSums(is.na(prestadores_data))
+
+# Teniendo en cuenta que posiblemente estemos hablando de hopitales y centros de salud, las columnas vacias puede proveer información relevante para el análisi más adelante
+
+# Analisis exploratorio ----
+
+## Histograma departamentos
+his_departamentos <- ggplot(prestadores_data, aes(x = depa_nombre, text = depa_nombre)) +
+  geom_bar(fill = "blue") +
+  labs(title = "Presencia de centros de salud u hospitales en departamentos") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplotly(hist_departamentos)
+
+## Histograma clpr
+hist_clpr <- ggplot(prestadores_data, aes(x = clpr_nombre, text = clpr_nombre)) +
+  geom_bar(fill = "red") +
+  labs(title = "Prestadores") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplotly(hist_clpr)
+
+# Gráfico de barras apiladas 
+dep_clpre <- ggplot(data = prestadores_data, aes(x = depa_nombre, fill = clpr_nombre, text = paste(depa_nombre , clpr_nombre))) +
+  geom_bar() +
+  labs(title = "Distribución de Tipos de Instituciones de Salud por Departamento",
+       x = "Departamento", y = "Número de Instituciones") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplotly(dep_clpre)
+
+
+
