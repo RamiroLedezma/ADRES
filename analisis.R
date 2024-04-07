@@ -390,8 +390,7 @@ grafico <- ggplot(dep_poblation, aes(x = Departamento, y = Poblacion)) +
   geom_bar(stat = "identity", fill = "#828282") +
   coord_flip() + 
   geom_text(aes(label = Poblacion), hjust = -0.3, color = "#030303", size = 3) +
-  labs(title = "Población por Departamento", x = "Departamento", y = "Población Total") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  labs(title = "Población por Departamento", x = "Departamento", y = "Población Total")
 
 tiff(filename = paste(dir, "Gráfico_t.jpeg", sep = ""),
      res = 500, height = 25, width = 40 , units = 'cm')
@@ -408,9 +407,10 @@ municipios_data$densidad_poblacion <- municipios_data$Poblacion / municipios_dat
 
 ### Hay que tener en cuenta que había un valor vación por eso la afectación de algunos departamentos 
 grafico_densidad <- ggplot(municipios_data, aes(x = Departamento, y = densidad_poblacion)) +
-  geom_bar(stat = "identity", fill = "skyblue") +
-  labs(title = "Densidad de Población por Departamento", x = "Departamento", y = "Densidad de Población (por km^2)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  geom_bar(stat = "identity", fill =  "#828282") +
+  geom_text(aes(label = Poblacion), hjust = -0.3, color = "black", size = 3) +
+  coord_flip() +
+  labs(title = "Densidad de Población por Departamento", x = "Departamento", y = "Densidad de Población (por km^2)")
 
  
 
