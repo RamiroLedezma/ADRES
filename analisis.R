@@ -273,7 +273,7 @@ colSums(is.na(municipios_data))
 
 colSums(is.na(prestadores_data))
 
-which(is.na(prestadores_data$direccion), arr.ind = TRUE) # Me llamo la atención que solo estás 2 filas: 40586 47358 no presentan dirección lo que podría entorpecer el preceso de prestación del servicio
+which(is.na(prestadores_data$direccion), arr.ind = TRUE) # Me llamo la atención que solo estás 2 filas: 40586 47358 no presentan dirección lo que podría entorpecer el proceso de prestación del servicio o verificaciòn de prestaciòn del mismo
 
 prestadores_data[40586,]
 
@@ -283,42 +283,62 @@ prestadores_data[47358,]
 # Por lo cual no las eliminaré
 # Analisis exploratorio ----
 
+gg_miss_which(prestadores_data)
+gg_miss_which(municipios_data)
+
+miss_var_summary(prestadores_data) # Obtengo el numero de valores faltantes en las columnas  y su porcentaje
+miss_var_summary(municipios_data)
+
 ## Gráficos ----
 
 dir <- getwd()
 
 ## Gráfico de barras departamentos
 
-hist_departamentos <- ggplot(prestadores_data, aes(x = depa_nombre, text = depa_nombre)) +
-  geom_bar(fill = "blue") +
-  labs(title = "Conteo de presencia de IPS u otros en departamentos") + 
+hist_departamentos <- ggplot(data = prestadores_data, aes(x = depa_nombre, text = depa_nombre)) +
+  geom_bar(fill = "#BF3EFF") +
+  geom_text(aes(x = depa_nombre, label = ..count..), position = position_stack(vjust = 1.05), stat = "count", colour = 'black') +
+  labs(title = "Conteo de presencia de IPS u otros en departamentos",
+       x = "Departamentos",
+       y = "Conteo Departamentos") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 
 ggplotly(hist_departamentos)
 
-## Eexportar grágico en alta resolución 
+## Eexportar grágico en alta resolución para presentación
 
 tiff(filename = paste(dir, "Gráfico_1.tiff", sep = ""),
-     res = 400, height = 9, width = 9, units = 'cm')
+     res = 500, height = 9, width = 9, units = 'cm')
 hist_departamentos
 dev.off()
 
 ## Gráfico de barras clpr
 hist_clpr <- ggplot(prestadores_data, aes(x = clpr_nombre, text = clpr_nombre)) +
   geom_bar(fill = "red") +
-  labs(title = "Prestadores") + 
+  labs(title = "Prestadores",
+       x = 'Tipos de prestadores',
+       y = 'Conteo') + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggplotly(hist_clpr)
 
 # Gráfico de barras apiladas 
 dep_clpre <- ggplot(data = prestadores_data, aes(x = depa_nombre, fill = clpr_nombre, text = paste(depa_nombre , clpr_nombre))) +
-  geom_bar() +
+  geom_bar(position = 'dodge') +
   labs(title = "Distribución de Tipos de Instituciones de Salud por Departamento",
        x = "Departamento", y = "Número de Instituciones") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggplotly(dep_clpre)
+
+
+tiff(filename = paste(dir, "Gráfico_3.tiff", sep = ""),
+     res = 500, height = 15, width = 35, units = 'cm')
+dep_clpre
+dev.off()
+
+
 
 # Grafico que muestra los habilitados y no habilitados por departamento
 
@@ -340,15 +360,24 @@ data_filter <- prestadores_data %>%
 
 
 prueba <-  ggplot(data = data_filter, aes(x = depa_nombre,  fill = nivel, text = paste(depa_nombre , nivel))) +
-  geom_bar() +
-  labs(title = "TBD",
-       x = "Departamento", y = "Nivel") +
+  geom_bar(position = 'dodge') +
+  labs(title = "Distribución de niveles de servicio en los Departamentos",
+       x = "Departamentos", y = "Cantidad de IPS u Hospitales por nivel") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ggplotly(prueba)
 
 
-prestadores_data %>% select(depa_nombre, muni_nombre, nivel, nombre_prestador, habilitado, clpr_nombre) %>% 
-  filter(depa_nombre == 'Cauca', nivel == 3) # Aquí verifico que efectivamente sean hospitales 
+data_filter %>% select(depa_nombre, muni_nombre, nivel, nombre_prestador, habilitado, clpr_nombre) %>% 
+  filter(depa_nombre == 'Guaviare', nivel == 2) # Aquí verifico que efectivamente sean IPS , hospitales o transporte de pacientes
+
+
+
+tiff(filename = paste(dir, "Gráfico_2.tiff", sep = ""),
+     res = 500, height = 15, width = 35, units = 'cm')
+prueba
+dev.off()
+
+
 
 
 ## Gráfico de la población por Departamentos 
@@ -358,10 +387,19 @@ dep_poblation <- aggregate(Poblacion ~ Departamento, data = municipios_data, sum
 
 # Crear el gráfico de barras
 grafico <- ggplot(dep_poblation, aes(x = Departamento, y = Poblacion)) +
-  geom_bar(stat = "identity", fill = "gray") +
-  geom_text(aes(label = Poblacion), vjust = -0.5, color = "black", size = 3) +
+  geom_bar(stat = "identity", fill = "#828282") +
+  coord_flip() + 
+  geom_text(aes(label = Poblacion), hjust = -0.3, color = "#030303", size = 3) +
   labs(title = "Población por Departamento", x = "Departamento", y = "Población Total") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+tiff(filename = paste(dir, "Gráfico_t.jpeg", sep = ""),
+     res = 500, height = 25, width = 40 , units = 'cm')
+grafico
+dev.off()
+
+
+
 
 ## Densidad de problación 
 municipios_data$Superficie <- gsub(",", ".", municipios_data$Superficie) # reemplazo puntos por comas en la columna Superficie
@@ -374,7 +412,7 @@ grafico_densidad <- ggplot(municipios_data, aes(x = Departamento, y = densidad_p
   labs(title = "Densidad de Población por Departamento", x = "Departamento", y = "Densidad de Población (por km^2)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-
+ 
 
 
 
