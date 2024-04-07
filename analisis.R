@@ -8,7 +8,6 @@ library(stringr)
 library(dbplyr)
 library(ggplot2)
 library(plotly)
-library(ggplotly)
 library(ggplot2)
 
 
@@ -32,32 +31,19 @@ glimpse(prestadores_data)
 glimpse(municipios_data)
 
 prestadores_data %>% distinct(depa_nombre)
-# Después de correr el código de arriba noto que algunos departamentos están separados de sus capitales, tambíen corregire eso 
+# Después de correr el código de arriba noto que hay 38 municipios, algunas ciudades capitales están siendo mostrasdas departamentos
 prestadores_data <- prestadores_data %>%
   mutate(depa_nombre = case_when(
-    depa_nombre == "Atl�ntico" ~ "Atlántico",
+  
     depa_nombre == "Barranquilla" ~ "Atlántico",
     depa_nombre == 'Buenaventura' ~ "Valle del cauca",
     depa_nombre == 'Cali' ~ "Valle del cauca",
     depa_nombre == "Santa Marta" ~ "Magdalena",
-    depa_nombre == "Bol�var" ~  "Bolívar",
     depa_nombre == 'Cartagena' ~ 'Bolívar',
-    depa_nombre == "Bogot� D.C" ~"Bogotá D.C",
-    depa_nombre == "Boyac�"   ~ "Boyacá",
-    depa_nombre == "Choc�"   ~ "Chocó",
-    depa_nombre == "Caquet�"  ~  "Caquetá",
-    depa_nombre == "C�rdoba" ~  "Chocó",
-    depa_nombre == "Guain�a" ~  "Guainía",
-    depa_nombre == "Nari�o"  ~  "Nariño",
-    depa_nombre == "Quind�o" ~  "Quindío",
-    depa_nombre == "San Andr�s y Providencia"  ~  "San Andrés y Providencia" ,
-    depa_nombre == "Vaup�s"  ~  "Vaupés",
       TRUE ~ depa_nombre  
   ))
 
-prestadores_data %>% distinct(depa_nombre)
-
-length(unique(prestadores_data$muni_nombre[str_detect(prestadores_data$muni_nombre, "�")]))  ### No es viable cambiar los nombres de los municipios como arriba
+prestadores_data %>% distinct(depa_nombre) # Quedaron 33 teniendo a Bogotá dado que es un D.C
 
 
 # Ya que está columna  tenía demasiados errores y generaba más de 3 veces el mismo nombre lo cual entorpece el análisis, utilice ayuda de una AI para corregir todos los errores 
@@ -258,8 +244,23 @@ municipios_data <- municipios_data %>%
     Departamento == "Va%Up�s" ~ "Vaupés",
     Departamento == "Vi%ch>ada" ~ "Vichada",
     Departamento == "Vichada" ~ "Vichada",
+    Departamento == "San Andrés" ~ "San Andrés y Providencia",
     TRUE ~ Departamento
   ))
+
+
+municipios_data <- municipios_data %>%
+  mutate(Region = case_when(
+    Region == "Regi�n Eje Cafetero"  ~ "Región Eje Cafetero",
+    Region == " Regi�n Caribe" ~ "Región Caribe",
+    Region == "Regi�n Centro Oriente" ~ "Región Centro Oriente",
+    Region == " Regi�n Centro Sur" ~ "Región Centro Sur",
+    Region == "Regi�n Pac�fico" ~ "Región Pacífico",
+    Region == " Regi�n Llano" ~ "Región Llano",
+    TRUE ~ Region))
+
+
+
 
 prestadores_data <- prestadores_data %>%
   mutate(clpr_nombre = case_when(
@@ -272,25 +273,43 @@ colSums(is.na(municipios_data))
 
 colSums(is.na(prestadores_data))
 
-# Teniendo en cuenta que posiblemente estemos hablando de hopitales y centros de salud, las columnas vacias puede proveer información relevante para el análisi más adelante
+which(is.na(prestadores_data$direccion), arr.ind = TRUE) # Me llamo la atención que solo estás 2 filas: 40586 47358 no presentan dirección lo que podría entorpecer el preceso de prestación del servicio
 
+prestadores_data[40586,]
+
+prestadores_data[47358,]
+
+# Teniendo en cuenta que posiblemente estemos hablando de hopitales y centros de salud, las columnas vacias puede proveer información relevante para el análisi más adelante.
+# Por lo cual no las eliminaré
 # Analisis exploratorio ----
 
-## Histograma departamentos
-his_departamentos <- ggplot(prestadores_data, aes(x = depa_nombre, text = depa_nombre)) +
+## Gráficos ----
+
+dir <- getwd()
+
+## Gráfico de barras departamentos
+
+hist_departamentos <- ggplot(prestadores_data, aes(x = depa_nombre, text = depa_nombre)) +
   geom_bar(fill = "blue") +
-  labs(title = "Presencia de centros de salud u hospitales en departamentos") + 
+  labs(title = "Conteo de presencia de IPS u otros en departamentos") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggplotly(hist_departamentos)
 
-## Histograma clpr
-hist_clpr <- ggplot(prestadores_data, aes(x = clpr_nombre)) +
+## Eexportar grágico en alta resolución 
+
+tiff(filename = paste(dir, "Gráfico_1.tiff", sep = ""),
+     res = 400, height = 9, width = 9, units = 'cm')
+hist_departamentos
+dev.off()
+
+## Gráfico de barras clpr
+hist_clpr <- ggplot(prestadores_data, aes(x = clpr_nombre, text = clpr_nombre)) +
   geom_bar(fill = "red") +
   labs(title = "Prestadores") + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-hist_clpr
+ggplotly(hist_clpr)
 
 # Gráfico de barras apiladas 
 dep_clpre <- ggplot(data = prestadores_data, aes(x = depa_nombre, fill = clpr_nombre, text = paste(depa_nombre , clpr_nombre))) +
@@ -300,6 +319,63 @@ dep_clpre <- ggplot(data = prestadores_data, aes(x = depa_nombre, fill = clpr_no
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggplotly(dep_clpre)
+
+# Grafico que muestra los habilitados y no habilitados por departamento
+
+dep_hab <- ggplot(data = prestadores_data, aes(x = depa_nombre, fill = habilitado, text = paste(depa_nombre , habilitado))) +
+  geom_bar() +
+  labs(title = "Intituciones y otras habilitadas por departamento",
+       x = "Departamento", y = "Número de Instituciones") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplotly(dep_hab) ## El gráfico nos dice que  todos las ips , profesionales independientes y demás están habilitados para prestar sus servicios
+
+
+# Grafico de presencia de IPS de nivel >= 1 en los departamentos 
+
+# El código abajo lo hice para filtrar la columna clpr_nombre dado que algunos prestadores marcaban de nivel 3 , objetos diferentes a servicios de salud.
+# Lo que busco es mirar las distribuciones de clinicas y su nivel en el país 
+data_filter <- prestadores_data %>%
+  filter(prestadores_data$clpr_nombre != "Objeto Social Diferente a la Prestación de Servicios de Salud" & !is.na(prestadores_data$nivel))
+
+
+prueba <-  ggplot(data = data_filter, aes(x = depa_nombre,  fill = nivel, text = paste(depa_nombre , nivel))) +
+  geom_bar() +
+  labs(title = "TBD",
+       x = "Departamento", y = "Nivel") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggplotly(prueba)
+
+
+prestadores_data %>% select(depa_nombre, muni_nombre, nivel, nombre_prestador, habilitado, clpr_nombre) %>% 
+  filter(depa_nombre == 'Cauca', nivel == 3) # Aquí verifico que efectivamente sean hospitales 
+
+
+## Gráfico de la población por Departamentos 
+
+# Calcular la población total de cada departamento
+dep_poblation <- aggregate(Poblacion ~ Departamento, data = municipios_data, sum)
+
+# Crear el gráfico de barras
+grafico <- ggplot(dep_poblation, aes(x = Departamento, y = Poblacion)) +
+  geom_bar(stat = "identity", fill = "gray") +
+  geom_text(aes(label = Poblacion), vjust = -0.5, color = "black", size = 3) +
+  labs(title = "Población por Departamento", x = "Departamento", y = "Población Total") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+## Densidad de problación 
+municipios_data$Superficie <- gsub(",", ".", municipios_data$Superficie) # reemplazo puntos por comas en la columna Superficie
+municipios_data$Superficie <- as.numeric(municipios_data$Superficie) # Convierto la columna Superficie en númerica
+municipios_data$densidad_poblacion <- municipios_data$Poblacion / municipios_data$Superficie # Calculo la densidad de la población 
+
+### Hay que tener en cuenta que había un valor vación por eso la afectación de algunos departamentos 
+grafico_densidad <- ggplot(municipios_data, aes(x = Departamento, y = densidad_poblacion)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Densidad de Población por Departamento", x = "Departamento", y = "Densidad de Población (por km^2)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
 
 
 
