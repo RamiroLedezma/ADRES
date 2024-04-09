@@ -333,10 +333,10 @@ dep_clpre <- ggplot(data = prestadores_data, aes(x = depa_nombre, fill = clpr_no
 ggplotly(dep_clpre)
 
 
-tiff(filename = paste(dir, "Gráfico_3.tiff", sep = ""),
-     res = 500, height = 15, width = 35, units = 'cm')
-dep_clpre
-dev.off()
+# tiff(filename = paste(dir, "Gráfico_3.tiff", sep = ""),
+#      res = 500, height = 15, width = 35, units = 'cm')
+# dep_clpre
+# dev.off()
 
 
 
@@ -372,10 +372,10 @@ data_filter %>% select(depa_nombre, muni_nombre, nivel, nombre_prestador, habili
 
 
 
-tiff(filename = paste(dir, "Gráfico_2.tiff", sep = ""),
-     res = 500, height = 15, width = 35, units = 'cm')
-prueba
-dev.off()
+# tiff(filename = paste(dir, "Gráfico_2.tiff", sep = ""),
+#      res = 500, height = 15, width = 35, units = 'cm')
+# prueba
+# dev.off()
 
 
 
@@ -392,10 +392,10 @@ grafico <- ggplot(dep_poblation, aes(x = Departamento, y = Poblacion)) +
   geom_text(aes(label = Poblacion), hjust = -0.3, color = "#030303", size = 3) +
   labs(title = "Población por Departamento", x = "Departamento", y = "Población Total")
 
-tiff(filename = paste(dir, "Gráfico_t.jpeg", sep = ""),
-     res = 500, height = 25, width = 40 , units = 'cm')
-grafico
-dev.off()
+# tiff(filename = paste(dir, "Gráfico_t.jpeg", sep = ""),
+#      res = 500, height = 25, width = 40 , units = 'cm')
+# grafico
+# dev.off()
 
 
 
@@ -406,14 +406,23 @@ municipios_data$Superficie <- as.numeric(municipios_data$Superficie) # Convierto
 municipios_data$densidad_poblacion <- municipios_data$Poblacion / municipios_data$Superficie # Calculo la densidad de la población 
 
 ### Hay que tener en cuenta que había un valor vación por eso la afectación de algunos departamentos 
+# Cargar la librería ggplot2 si no está cargada
+library(ggplot2)
+
+# Crear el gráfico
 grafico_densidad <- ggplot(municipios_data, aes(x = Departamento, y = densidad_poblacion)) +
-  geom_bar(stat = "identity", fill =  "#828282") +
-  geom_text(aes(label = Poblacion), hjust = -0.3, color = "black", size = 3) +
+  geom_bar(stat = "identity", fill = "#828282") +
   coord_flip() +
   labs(title = "Densidad de Población por Departamento", x = "Departamento", y = "Densidad de Población (por km^2)")
 
- 
+grafico_densidad
 
+
+ 
+tiff(filename = paste(dir, "Gráfico_4.jpeg", sep = ""),
+      res = 500, height = 25, width = 40 , units = 'cm')
+grafico_densidad
+ dev.off()
 
 
 
