@@ -424,5 +424,10 @@ tiff(filename = paste(dir, "Gráfico_4.jpeg", sep = ""),
 grafico_densidad
  dev.off()
 
+# Finalmente no utilice algunas columnas entonces voy a eliminarlas , adémas por protección de la información 
+ 
+ prestadores_data <- subset(prestadores_data, select = -c (rep_legal, naju_nombre, numero_sede_principal, fecha_corte_REPS, telefono_adicional, email_adicional, 
+                                                           fax,  email, gerente, direccion, telefono, fecha_radicacion, fecha_vencimiento, fecha_cierre, dv) )
 
-
+ prestadores_data <- subset(prestadores_data, select = -c (ese, caracter, tido_codigo, naju_codigo))
+ 
